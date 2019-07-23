@@ -88,19 +88,22 @@ export default class App extends Component {
   }
 
   async evaluatePoP() {
-    try {
-      let position = await this.getPosition();
-      let forecast = await this.getForecast(position.coords.latitude, position.coords.longitude);
-      console.warn('PoP: ', forecast.currently.precipProbability);
-      if (forecast.currently.precipProbability < this.state.selectedPoP) {
-        this.writeToBluno(MSG_2);
-        console.warn('PoP < Selected PoP');
-      } else {
-        this.writeToBluno(MSG_0);
-        console.warn('PoP >= Selected PoP');
+    let isConnected = await BleManager.isPeripheralConnected(PERIPHERAL_ID, []);
+    if (isConnected) {
+      try {
+        let position = await this.getPosition();
+        let forecast = await this.getForecast(position.coords.latitude, position.coords.longitude);
+        console.warn('PoP: ', forecast.currently.precipProbability);
+        if (forecast.currently.precipProbability < this.state.selectedPoP) {
+          this.writeToBluno(MSG_2);
+          console.warn('PoP < Selected PoP');
+        } else {
+          this.writeToBluno(MSG_0);
+          console.warn('PoP >= Selected PoP');
+        }
+      } catch (err) {
+        console.warn('Error: ', err);
       }
-    } catch (err) {
-      console.warn('Error: ', err);
     }
   }
 
