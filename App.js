@@ -1,5 +1,6 @@
 import React, { Component, Fragment } from 'react';
 import {
+  AppState,
   Button,
   PermissionsAndroid,
   Picker,
@@ -13,7 +14,7 @@ import { Colors } from 'react-native/Libraries/NewAppScreen';
 import BleManager from 'react-native-ble-manager';
 import Geolocation from '@react-native-community/geolocation';
 
-const PERIPHERAL_ID = "1C:BA:8C:1D:88:55";
+const PERIPHERAL_ID = '1C:BA:8C:1D:88:55';
 const SERVICE_UUID = '0000dfb0-0000-1000-8000-00805f9b34fb';
 const CHARACTERISTIC_UUID = '0000dfb1-0000-1000-8000-00805f9b34fb';
 const MSG_0 = [48]; // 0x30
@@ -30,6 +31,7 @@ export default class App extends Component {
   constructor() {
     super();
     this.state = {
+      appState: AppState.currentState,
       selectedPoP: 0
     };
   }
@@ -38,9 +40,9 @@ export default class App extends Component {
     if (Platform.OS === 'android' && Platform.Version >= 23) {
       PermissionsAndroid.requestMultiple([PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION, PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION]).then((result) => {
         if (result) {
-          console.warn("User accepted");
+          console.warn('User accepted');
         } else {
-          console.warn("User refused");
+          console.warn('User refused');
         }
       });
     }
@@ -50,12 +52,23 @@ export default class App extends Component {
     }).catch((err) => {
       console.warn('Error: ', err);
     });
+
+    AppState.addEventListener('change', this.handleAppStateChange);
   }
 
   componentWillUnmount() {
     clearInterval(intervalId);
     BleManager.disconnect(PERIPHERAL_ID);
+    AppState.removeEventListener('change', this.handleAppStateChange);
   }
+
+  handleAppStateChange = (nextAppState) => {
+    if (nextAppState.match(/inactive|background/) && this.state.appState === 'active') {
+      clearInterval(intervalId);
+      console.warn('TIMER STOPPED');
+    }
+    this.setState({ appState: nextAppState });
+  };
 
   btnConnect_OnPress() {
     BleManager.connect(PERIPHERAL_ID).then(() => {
