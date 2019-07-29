@@ -22,7 +22,7 @@ const MSG_1 = [49]; // 0x31
 const MSG_2 = [50]; // 0x32
 const DARKSKY_BASE_URL = 'https://api.darksky.net/forecast/';
 const DARKSKY_TOKEN = 'f71e2a96749b143110e210b9835dde00';
-const DARKSKY_EXCLUDE = 'minutely,hourly,daily,alerts,flags';
+const DARKSKY_EXCLUDE = 'currently,minutely,hourly,alerts,flags';
 const TIMEOUT = 10000;
 const INTERVAL = 90000;
 var intervalId;
@@ -106,8 +106,8 @@ export default class App extends Component {
       try {
         let position = await this.getPosition();
         let forecast = await this.getForecast(position.coords.latitude, position.coords.longitude);
-        console.warn('PoP: ', forecast.currently.precipProbability);
-        if (forecast.currently.precipProbability < this.state.selectedPoP) {
+        console.warn('PoP: ', forecast.daily.data[0].precipProbability);
+        if (forecast.daily.data[0].precipProbability < this.state.selectedPoP) {
           this.writeToBluno(MSG_2);
           console.warn('PoP < Selected PoP');
         } else {
